@@ -1,0 +1,282 @@
+openapi: 3.1.0
+info:
+  title: Pilots schemas
+  version: 0.1.0
+  description: Pilot charters, portfolio cadence decisions, and graduate audit packs.
+paths: {}
+components:
+  schemas:
+    PilotId:
+      type: string
+      pattern: '^plt_[0-9A-HJKMNP-TV-Z]{26}$'
+    CharterId:
+      type: string
+      pattern: '^chr_[0-9A-HJKMNP-TV-Z]{26}$'
+    PortfolioDecisionId:
+      type: string
+      pattern: '^pdc_[0-9A-HJKMNP-TV-Z]{26}$'
+
+    PilotStatus:
+      type: string
+      enum: [proposed, active, graduated, extended, killed]
+
+    PortfolioLane:
+      type: string
+      enum: [admitted, gated, building, review]
+
+    Pilot:
+      type: object
+      required:
+        - pilotId
+        - name
+        - status
+        - sponsorId
+        - successMetric
+        - createdAt
+      properties:
+        pilotId:
+          $ref: '#/components/schemas/PilotId'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/PilotStatus'
+        lane:
+          $ref: '#/components/schemas/PortfolioLane'
+        sponsorId:
+          type: string
+          description: Executive sponsor user id (usr_…).
+        successMetric:
+          type: string
+          maxLength: 1000
+          description: Real-world holdout KPI definition (BR-6).
+        readinessAssessmentId:
+          type: string
+        externalMlStatusUrl:
+          type: string
+          format: uri
+          description: External ML platform status link only (BR-10).
+        nextCadenceAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PilotCreate:
+      type: object
+      required:
+        - name
+        - sponsorId
+        - successMetric
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        sponsorId:
+          type: string
+        successMetric:
+          type: string
+          maxLength: 1000
+        readinessAssessmentId:
+          type: string
+        externalMlStatusUrl:
+          type: string
+          format: uri
+
+    Charter:
+      type: object
+      required:
+        - charterId
+        - pilotId
+        - sponsorId
+        - objectives
+        - status
+        - createdAt
+      properties:
+        charterId:
+          $ref: '#/components/schemas/CharterId'
+        pilotId:
+          $ref: '#/components/schemas/PilotId'
+        sponsorId:
+          type: string
+        objectives:
+          type: string
+          maxLength: 4000
+        realWorldHoldoutMetric:
+          type: string
+          maxLength: 1000
+        status:
+          type: string
+          enum: [draft, submitted, locked]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CharterUpsert:
+      type: object
+      required:
+        - sponsorId
+        - objectives
+      properties:
+        sponsorId:
+          type: string
+        objectives:
+          type: string
+          maxLength: 4000
+        realWorldHoldoutMetric:
+          type: string
+          maxLength: 1000
+
+    PortfolioDecisionType:
+      type: string
+      enum: [graduate, extend, kill]
+
+    PortfolioDecision:
+      type: object
+      required:
+        - decisionId
+        - pilotId
+        - decision
+        - rationale
+        - evidencedBusinessValue
+        - decidedAt
+      properties:
+        decisionId:
+          $ref: '#/components/schemas/PortfolioDecisionId'
+        pilotId:
+          $ref: '#/components/schemas/PilotId'
+        decision:
+          $ref: '#/components/schemas/PortfolioDecisionType'
+        rationale:
+          type: string
+          maxLength: 4000
+        evidencedBusinessValue:
+          type: boolean
+        decidedAt:
+          type: string
+          format: date-time
+
+    PortfolioDecisionCreate:
+      type: object
+      required:
+        - decision
+        - rationale
+        - evidencedBusinessValue
+      properties:
+        decision:
+          $ref: '#/components/schemas/PortfolioDecisionType'
+        rationale:
+          type: string
+          maxLength: 4000
+        evidencedBusinessValue:
+          type: boolean
+
+    GraduateAuditPack:
+      type: object
+      required:
+        - pilotId
+        - decisions
+        - gateHistory
+        - exportedAt
+      properties:
+        pilotId:
+          $ref: '#/components/schemas/PilotId'
+        decisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioDecision'
+        gateHistory:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+          description: Anonymisation gate history snapshot for audit (BR-12).
+        exportedAt:
+          type: string
+          format: date-time
+
+    PilotListData:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pilot'
+        nextCursor:
+          type: string
+
+    PilotResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Pilot'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    PilotListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PilotListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    CharterResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Charter'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    PortfolioDecisionResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PortfolioDecision'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    PortfolioDecisionListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioDecision'
+        nextCursor:
+          type: string
+
+    PortfolioDecisionListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PortfolioDecisionListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    GraduateAuditPackResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GraduateAuditPack'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

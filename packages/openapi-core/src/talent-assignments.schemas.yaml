@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: Talent assignment schemas
+  version: 0.1.0
+  description: ATF dream-team role slots and domain specialist bookings.
+paths: {}
+components:
+  schemas:
+    TalentAssignmentId:
+      type: string
+      pattern: '^tal_[0-9A-HJKMNP-TV-Z]{26}$'
+
+    TalentRole:
+      type: string
+      enum:
+        - data_scientist
+        - domain_specialist
+        - engineer
+        - product_owner
+        - scrum_master
+
+    TalentAssignment:
+      type: object
+      required:
+        - assignmentId
+        - pilotId
+        - role
+        - personId
+        - createdAt
+      properties:
+        assignmentId:
+          $ref: '#/components/schemas/TalentAssignmentId'
+        pilotId:
+          type: string
+        role:
+          $ref: '#/components/schemas/TalentRole'
+        personId:
+          type: string
+        hoursCommitted:
+          type: number
+          minimum: 0
+          description: Hours committed; domain specialists may be as low as 1 (BR-5).
+        domainConsultBookedAt:
+          type: string
+          format: date-time
+          description: One-hour domain specialist booking slot.
+        createdAt:
+          type: string
+          format: date-time
+
+    TalentAssignmentCreate:
+      type: object
+      required:
+        - pilotId
+        - role
+        - personId
+      properties:
+        pilotId:
+          type: string
+        role:
+          $ref: '#/components/schemas/TalentRole'
+        personId:
+          type: string
+        hoursCommitted:
+          type: number
+          minimum: 0
+        domainConsultBookedAt:
+          type: string
+          format: date-time
+
+    TalentAssignmentListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TalentAssignment'
+        nextCursor:
+          type: string
+
+    TalentAssignmentResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TalentAssignment'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    TalentAssignmentListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TalentAssignmentListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

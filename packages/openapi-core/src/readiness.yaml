@@ -1,0 +1,129 @@
+openapi: 3.1.0
+info:
+  title: Readiness API
+  version: 0.1.0
+  description: |
+    Five-pillar organisational readiness scoring before portfolio admission (BR-2, BR-9).
+  license:
+    name: Proprietary
+    url: https://pilotspan.local/license
+  x-domain: rdy
+servers:
+  - url: https://api.pilotspan.local
+    description: Local / Pilotspan API
+security:
+  - apiKey: []
+tags:
+  - name: ReadinessAssessments
+    description: Structure, infrastructure, data, talent, and process scoring
+paths:
+  /v1/readiness-assessments:
+    get:
+      operationId: listReadinessAssessments
+      tags: [ReadinessAssessments]
+      summary: List readiness assessments
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Assessments page
+          content:
+            application/json:
+              schema:
+                $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAssessmentListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createReadinessAssessment
+      tags: [ReadinessAssessments]
+      summary: Create a readiness assessment
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAssessmentCreate
+      responses:
+        '201':
+          description: Assessment created
+          content:
+            application/json:
+              schema:
+                $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAssessmentResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/readiness-assessments/{assessmentId}:
+    get:
+      operationId: getReadinessAssessment
+      tags: [ReadinessAssessments]
+      summary: Get a readiness assessment
+      parameters:
+        - name: assessmentId
+          in: path
+          required: true
+          schema:
+            $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAssessmentId
+      responses:
+        '200':
+          description: Assessment
+          content:
+            application/json:
+              schema:
+                $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAssessmentResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/readiness-assessments/{assessmentId}/admission:
+    post:
+      operationId: decideReadinessAdmission
+      tags: [ReadinessAssessments]
+      summary: Admit or hold a readiness assessment for the portfolio
+      parameters:
+        - name: assessmentId
+          in: path
+          required: true
+          schema:
+            $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAssessmentId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAdmissionRequest
+      responses:
+        '200':
+          description: Admission decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: ./readiness.schemas.yaml#/components/schemas/ReadinessAssessmentResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

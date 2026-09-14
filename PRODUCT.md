@@ -104,8 +104,8 @@ flowchart TD
 
 ## OpenAPI skeleton
 
-Canonical HTTP surface lives in sibling [openapi.yaml](openapi.yaml). Summary:
+Canonical HTTP surface lives under [`packages/openapi-core/src/`](packages/openapi-core/src/) (one YAML per domain). Summary:
 
 - **Base path:** `/v1/...`
 - **Auth:** API key / Bearer JWT.
-- **Resource groups:** ReadinessAssessments, Pilots, AnonymisationGates, Custodians, TalentAssignments.
+- **Domains:** identity, readiness, pilots, anonymisation-gates, custodians, talent-assignments, shadow-ai.

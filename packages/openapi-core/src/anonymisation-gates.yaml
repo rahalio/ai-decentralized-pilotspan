@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: Anonymisation Gates API
+  version: 0.1.0
+  description: |
+    Five-point anonymisation passport — Aggregate / Remove / Top-Bottom / Group / Hash (BR-3, BR-11).
+  license:
+    name: Proprietary
+    url: https://pilotspan.local/license
+  x-domain: ang
+servers:
+  - url: https://api.pilotspan.local
+security:
+  - apiKey: []
+tags:
+  - name: AnonymisationGates
+    description: Ethics anonymisation scoring and pass/fail seal
+paths:
+  /v1/anonymisation-gates:
+    get:
+      operationId: listAnonymisationGates
+      tags: [AnonymisationGates]
+      summary: List anonymisation gates
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: pilotId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/GateStatus
+      responses:
+        '200':
+          description: Gates page
+          content:
+            application/json:
+              schema:
+                $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: submitAnonymisationGate
+      tags: [AnonymisationGates]
+      summary: Submit five-technique scores for a pilot
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateCreate
+      responses:
+        '201':
+          description: Gate submitted
+          content:
+            application/json:
+              schema:
+                $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/anonymisation-gates/{gateId}:
+    get:
+      operationId: getAnonymisationGate
+      tags: [AnonymisationGates]
+      summary: Get an anonymisation gate
+      parameters:
+        - name: gateId
+          in: path
+          required: true
+          schema:
+            $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateId
+      responses:
+        '200':
+          description: Gate
+          content:
+            application/json:
+              schema:
+                $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/anonymisation-gates/{gateId}/decision:
+    post:
+      operationId: decideAnonymisationGate
+      tags: [AnonymisationGates]
+      summary: Pass or fail the gate (waive is never allowed)
+      parameters:
+        - name: gateId
+          in: path
+          required: true
+          schema:
+            $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateDecision
+      responses:
+        '200':
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: ./anonymisation-gates.schemas.yaml#/components/schemas/AnonymisationGateResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

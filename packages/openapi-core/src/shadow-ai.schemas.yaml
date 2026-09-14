@@ -1,0 +1,117 @@
+openapi: 3.1.0
+info:
+  title: Shadow AI schemas
+  version: 0.1.0
+  description: Shadow AI discovery register for piecemeal department tools.
+paths: {}
+components:
+  schemas:
+    ShadowAiSystemId:
+      type: string
+      pattern: '^sha_[0-9A-HJKMNP-TV-Z]{26}$'
+
+    ShadowAiStatus:
+      type: string
+      enum: [discovered, claimed, remediating, retired, onboarded]
+
+    ShadowAiSystem:
+      type: object
+      required:
+        - systemId
+        - name
+        - department
+        - status
+        - discoveredAt
+      properties:
+        systemId:
+          $ref: '#/components/schemas/ShadowAiSystemId'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        department:
+          type: string
+          maxLength: 200
+        ownerPersonId:
+          type: string
+        status:
+          $ref: '#/components/schemas/ShadowAiStatus'
+        riskNotes:
+          type: string
+          maxLength: 4000
+        linkedPilotId:
+          type: string
+          description: Optional portfolio pilot after onboarding.
+        discoveredAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ShadowAiSystemCreate:
+      type: object
+      required:
+        - name
+        - department
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        department:
+          type: string
+          maxLength: 200
+        ownerPersonId:
+          type: string
+        riskNotes:
+          type: string
+          maxLength: 4000
+
+    ShadowAiRemediationAction:
+      type: string
+      enum: [claim, remediate, retire, onboard]
+
+    ShadowAiRemediationRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          $ref: '#/components/schemas/ShadowAiRemediationAction'
+        ownerPersonId:
+          type: string
+        linkedPilotId:
+          type: string
+        notes:
+          type: string
+          maxLength: 2000
+
+    ShadowAiSystemListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShadowAiSystem'
+        nextCursor:
+          type: string
+
+    ShadowAiSystemResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ShadowAiSystem'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    ShadowAiSystemListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ShadowAiSystemListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

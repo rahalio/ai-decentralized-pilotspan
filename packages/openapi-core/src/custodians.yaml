@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info:
+  title: Custodians API
+  version: 0.1.0
+  description: |
+    Data custodianship, dataset approvals, and quality defect logs (BR-4).
+  license:
+    name: Proprietary
+    url: https://pilotspan.local/license
+  x-domain: cst
+servers:
+  - url: https://api.pilotspan.local
+security:
+  - apiKey: []
+tags:
+  - name: Custodians
+    description: Custodian assignment and dataset stewardship
+paths:
+  /v1/custodians:
+    get:
+      operationId: listCustodians
+      tags: [Custodians]
+      summary: List custodians
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Custodians page
+          content:
+            application/json:
+              schema:
+                $ref: ./custodians.schemas.yaml#/components/schemas/CustodianListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: assignCustodian
+      tags: [Custodians]
+      summary: Assign a data custodian
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./custodians.schemas.yaml#/components/schemas/CustodianAssign
+      responses:
+        '201':
+          description: Custodian assigned
+          content:
+            application/json:
+              schema:
+                $ref: ./custodians.schemas.yaml#/components/schemas/CustodianResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/dataset-approvals:
+    get:
+      operationId: listDatasetApprovals
+      tags: [Custodians]
+      summary: List dataset approvals
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: pilotId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Approvals page
+          content:
+            application/json:
+              schema:
+                $ref: ./custodians.schemas.yaml#/components/schemas/DatasetApprovalListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: decideDatasetApproval
+      tags: [Custodians]
+      summary: Approve or reject a dataset for a pilot
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./custodians.schemas.yaml#/components/schemas/DatasetApprovalCreate
+      responses:
+        '201':
+          description: Approval recorded
+          content:
+            application/json:
+              schema:
+                $ref: ./custodians.schemas.yaml#/components/schemas/DatasetApprovalResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/quality-issues:
+    get:
+      operationId: listQualityIssues
+      tags: [Custodians]
+      summary: List dataset quality issues
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: datasetName
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Issues page
+          content:
+            application/json:
+              schema:
+                $ref: ./custodians.schemas.yaml#/components/schemas/QualityIssueListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createQualityIssue
+      tags: [Custodians]
+      summary: Log a data quality defect
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./custodians.schemas.yaml#/components/schemas/QualityIssueCreate
+      responses:
+        '201':
+          description: Issue logged
+          content:
+            application/json:
+              schema:
+                $ref: ./custodians.schemas.yaml#/components/schemas/QualityIssueResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

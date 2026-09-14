@@ -1,0 +1,132 @@
+openapi: 3.1.0
+info:
+  title: Shadow AI API
+  version: 0.1.0
+  description: |
+    Discover, claim, remediate, or retire piecemeal department AI tools (BR-8).
+  license:
+    name: Proprietary
+    url: https://pilotspan.local/license
+  x-domain: sha
+servers:
+  - url: https://api.pilotspan.local
+security:
+  - apiKey: []
+tags:
+  - name: ShadowAiSystems
+    description: Shadow AI discovery register
+paths:
+  /v1/shadow-ai-systems:
+    get:
+      operationId: listShadowAiSystems
+      tags: [ShadowAiSystems]
+      summary: List shadow AI systems
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiStatus
+      responses:
+        '200':
+          description: Systems page
+          content:
+            application/json:
+              schema:
+                $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiSystemListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createShadowAiSystem
+      tags: [ShadowAiSystems]
+      summary: Register a discovered shadow AI system
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiSystemCreate
+      responses:
+        '201':
+          description: System registered
+          content:
+            application/json:
+              schema:
+                $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiSystemResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/shadow-ai-systems/{systemId}:
+    get:
+      operationId: getShadowAiSystem
+      tags: [ShadowAiSystems]
+      summary: Get a shadow AI system
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiSystemId
+      responses:
+        '200':
+          description: System
+          content:
+            application/json:
+              schema:
+                $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiSystemResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/shadow-ai-systems/{systemId}/remediation:
+    post:
+      operationId: remediateShadowAiSystem
+      tags: [ShadowAiSystems]
+      summary: Claim, remediate, retire, or onboard a shadow system
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiSystemId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiRemediationRequest
+      responses:
+        '200':
+          description: Remediation applied
+          content:
+            application/json:
+              schema:
+                $ref: ./shadow-ai.schemas.yaml#/components/schemas/ShadowAiSystemResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

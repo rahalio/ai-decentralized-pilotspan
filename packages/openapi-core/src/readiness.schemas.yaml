@@ -1,0 +1,157 @@
+openapi: 3.1.0
+info:
+  title: Readiness schemas
+  version: 0.1.0
+  description: Five-pillar organisational readiness assessments and admit/hold decisions.
+paths: {}
+components:
+  schemas:
+    ReadinessAssessmentId:
+      type: string
+      pattern: '^rdy_[0-9A-HJKMNP-TV-Z]{26}$'
+      description: Prefixed readiness assessment id.
+
+    AdmissionDecision:
+      type: string
+      enum: [admit, hold]
+      description: Portfolio admission outcome after readiness scoring.
+
+    ReadinessAssessment:
+      type: object
+      required:
+        - assessmentId
+        - organisationId
+        - structureScore
+        - infrastructureScore
+        - dataScore
+        - talentScore
+        - processScore
+        - overallScore
+        - admissionStatus
+        - createdAt
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/ReadinessAssessmentId'
+        organisationId:
+          type: string
+          description: Tenant / organisation id (tnt_…).
+        structureScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        infrastructureScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        dataScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        talentScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        processScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        overallScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        hardwareCloudNotes:
+          type: string
+          maxLength: 2000
+          description: Hardware/cloud readiness notes (BR-9).
+        evidenceNotes:
+          type: string
+          maxLength: 4000
+        admissionStatus:
+          type: string
+          enum: [draft, admitted, held]
+        admissionRationale:
+          type: string
+          maxLength: 2000
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ReadinessAssessmentCreate:
+      type: object
+      required:
+        - organisationId
+      properties:
+        organisationId:
+          type: string
+        structureScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        infrastructureScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        dataScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        talentScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        processScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        hardwareCloudNotes:
+          type: string
+          maxLength: 2000
+        evidenceNotes:
+          type: string
+          maxLength: 4000
+
+    ReadinessAdmissionRequest:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          $ref: '#/components/schemas/AdmissionDecision'
+        rationale:
+          type: string
+          maxLength: 2000
+
+    ReadinessAssessmentListData:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadinessAssessment'
+        nextCursor:
+          type: string
+
+    ReadinessAssessmentResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/ReadinessAssessment'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    ReadinessAssessmentListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/ReadinessAssessmentListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

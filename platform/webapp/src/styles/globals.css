@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-ink: #e8eef4;
+  --color-graphite-950: #0c1016;
+  --color-graphite-900: #161c26;
+  --color-chalk: #7ba3c9;
+  --color-passport: #3d9b6e;
+  --color-brick: #c4503e;
+  --color-amber: #d9a441;
+  --color-steel: #8a97a8;
+  --color-brand: #a8c4de;
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --motion-stamp: 180ms ease-out;
+  --motion-kill: 220ms ease-in-out;
+  --motion-admit: 200ms ease-out;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--color-graphite-950);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+body {
+  background-image:
+    linear-gradient(90deg, rgba(123, 163, 201, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(123, 163, 201, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86) rotate(-6deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes admit-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stamp {
+  animation: stamp-in var(--motion-stamp) both;
+}
+
+.animate-admit {
+  animation: admit-fade var(--motion-admit) both;
+}

@@ -1,0 +1,11 @@
+---
+description: Never commit or push .codegen to GitHub
+alwaysApply: true
+---
+
+# `.codegen` must never be committed
+
+- Do **not** add, commit, or push `.codegen/` (or vendored `zero_codegen`) to GitHub.
+- `.codegen/` is listed in `.gitignore` as a safeguard; do not remove that entry.
+- For local or CI codegen, copy `.codegen` from `zero-apps-codegen-scaffold` (or another approved internal source), then run `pnpm codegen:paths` and ensure `package_scope` is `@pilotspan`.
+- Bundled OpenAPI under `packages/openapi-core/src/.bundled/` is also gitignored — do not commit it.

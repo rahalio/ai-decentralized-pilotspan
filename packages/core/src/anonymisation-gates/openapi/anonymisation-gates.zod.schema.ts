@@ -1,0 +1,563 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const submitAnonymisationGate_Body = z
+  .object({
+    pilotId: z.string(),
+    aggregateScore: z.number().int().gte(0).lte(5),
+    removeScore: z.number().int().gte(0).lte(5),
+    topBottomCodingScore: z.number().int().gte(0).lte(5),
+    groupScore: z.number().int().gte(0).lte(5),
+    hashDigestScore: z.number().int().gte(0).lte(5),
+    correlatedFeatureNotes: z.string().max(4000).optional(),
+  })
+  .passthrough();
+const decideAnonymisationGate_Body = z
+  .object({
+    outcome: z.enum(['pass', 'fail']),
+    rationale: z.string().max(2000).optional(),
+  })
+  .passthrough();
+const GateStatus = z.enum(['submitted', 'pass', 'fail']);
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const AnonymisationGateId = z.string();
+const TechniqueScore = z.number();
+const AnonymisationGate = z
+  .object({
+    gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+    pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+    status: z.enum(['submitted', 'pass', 'fail']),
+    aggregateScore: z.number().int().gte(0).lte(5),
+    removeScore: z.number().int().gte(0).lte(5),
+    topBottomCodingScore: z.number().int().gte(0).lte(5),
+    groupScore: z.number().int().gte(0).lte(5),
+    hashDigestScore: z.number().int().gte(0).lte(5),
+    totalScore: z.number().int().gte(0).lte(25),
+    passThreshold: z.number().int().gte(1).lte(25).default(15),
+    correlatedFeatureNotes: z.string().max(4000).optional(),
+    decisionRationale: z.string().max(2000).optional(),
+    waiveRequested: z.boolean().optional().default(false),
+    createdAt: z.string().datetime({ offset: true }),
+    decidedAt: z.string().datetime({ offset: true }).optional(),
+  })
+  .passthrough();
+const AnonymisationGateListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+          pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+          status: z.enum(['submitted', 'pass', 'fail']),
+          aggregateScore: z.number().int().gte(0).lte(5),
+          removeScore: z.number().int().gte(0).lte(5),
+          topBottomCodingScore: z.number().int().gte(0).lte(5),
+          groupScore: z.number().int().gte(0).lte(5),
+          hashDigestScore: z.number().int().gte(0).lte(5),
+          totalScore: z.number().int().gte(0).lte(25),
+          passThreshold: z.number().int().gte(1).lte(25).default(15),
+          correlatedFeatureNotes: z.string().max(4000).optional(),
+          decisionRationale: z.string().max(2000).optional(),
+          waiveRequested: z.boolean().optional().default(false),
+          createdAt: z.string().datetime({ offset: true }),
+          decidedAt: z.string().datetime({ offset: true }).optional(),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const AnonymisationGateListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+              pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+              status: z.enum(['submitted', 'pass', 'fail']),
+              aggregateScore: z.number().int().gte(0).lte(5),
+              removeScore: z.number().int().gte(0).lte(5),
+              topBottomCodingScore: z.number().int().gte(0).lte(5),
+              groupScore: z.number().int().gte(0).lte(5),
+              hashDigestScore: z.number().int().gte(0).lte(5),
+              totalScore: z.number().int().gte(0).lte(25),
+              passThreshold: z.number().int().gte(1).lte(25).default(15),
+              correlatedFeatureNotes: z.string().max(4000).optional(),
+              decisionRationale: z.string().max(2000).optional(),
+              waiveRequested: z.boolean().optional().default(false),
+              createdAt: z.string().datetime({ offset: true }),
+              decidedAt: z.string().datetime({ offset: true }).optional(),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const AnonymisationGateCreate = z
+  .object({
+    pilotId: z.string(),
+    aggregateScore: z.number().int().gte(0).lte(5),
+    removeScore: z.number().int().gte(0).lte(5),
+    topBottomCodingScore: z.number().int().gte(0).lte(5),
+    groupScore: z.number().int().gte(0).lte(5),
+    hashDigestScore: z.number().int().gte(0).lte(5),
+    correlatedFeatureNotes: z.string().max(4000).optional(),
+  })
+  .passthrough();
+const AnonymisationGateResponse = z
+  .object({
+    data: z
+      .object({
+        gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+        pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+        status: z.enum(['submitted', 'pass', 'fail']),
+        aggregateScore: z.number().int().gte(0).lte(5),
+        removeScore: z.number().int().gte(0).lte(5),
+        topBottomCodingScore: z.number().int().gte(0).lte(5),
+        groupScore: z.number().int().gte(0).lte(5),
+        hashDigestScore: z.number().int().gte(0).lte(5),
+        totalScore: z.number().int().gte(0).lte(25),
+        passThreshold: z.number().int().gte(1).lte(25).default(15),
+        correlatedFeatureNotes: z.string().max(4000).optional(),
+        decisionRationale: z.string().max(2000).optional(),
+        waiveRequested: z.boolean().optional().default(false),
+        createdAt: z.string().datetime({ offset: true }),
+        decidedAt: z.string().datetime({ offset: true }).optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const AnonymisationGateDecision = z
+  .object({
+    outcome: z.enum(['pass', 'fail']),
+    rationale: z.string().max(2000).optional(),
+  })
+  .passthrough();
+
+export const schemas: any = {
+  submitAnonymisationGate_Body,
+  decideAnonymisationGate_Body,
+  GateStatus,
+  Problem,
+  AnonymisationGateId,
+  TechniqueScore,
+  AnonymisationGate,
+  AnonymisationGateListData,
+  ResponseMeta,
+  AnonymisationGateListResponse,
+  AnonymisationGateCreate,
+  AnonymisationGateResponse,
+  AnonymisationGateDecision,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'get',
+    path: '/v1/anonymisation-gates',
+    alias: 'listAnonymisationGates',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(200).optional().default(50),
+      },
+      {
+        name: 'pilotId',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'status',
+        type: 'Query',
+        schema: z.enum(['submitted', 'pass', 'fail']).optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  status: z.enum(['submitted', 'pass', 'fail']),
+                  aggregateScore: z.number().int().gte(0).lte(5),
+                  removeScore: z.number().int().gte(0).lte(5),
+                  topBottomCodingScore: z.number().int().gte(0).lte(5),
+                  groupScore: z.number().int().gte(0).lte(5),
+                  hashDigestScore: z.number().int().gte(0).lte(5),
+                  totalScore: z.number().int().gte(0).lte(25),
+                  passThreshold: z.number().int().gte(1).lte(25).default(15),
+                  correlatedFeatureNotes: z.string().max(4000).optional(),
+                  decisionRationale: z.string().max(2000).optional(),
+                  waiveRequested: z.boolean().optional().default(false),
+                  createdAt: z.string().datetime({ offset: true }),
+                  decidedAt: z.string().datetime({ offset: true }).optional(),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/anonymisation-gates',
+    alias: 'submitAnonymisationGate',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: submitAnonymisationGate_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+            pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+            status: z.enum(['submitted', 'pass', 'fail']),
+            aggregateScore: z.number().int().gte(0).lte(5),
+            removeScore: z.number().int().gte(0).lte(5),
+            topBottomCodingScore: z.number().int().gte(0).lte(5),
+            groupScore: z.number().int().gte(0).lte(5),
+            hashDigestScore: z.number().int().gte(0).lte(5),
+            totalScore: z.number().int().gte(0).lte(25),
+            passThreshold: z.number().int().gte(1).lte(25).default(15),
+            correlatedFeatureNotes: z.string().max(4000).optional(),
+            decisionRationale: z.string().max(2000).optional(),
+            waiveRequested: z.boolean().optional().default(false),
+            createdAt: z.string().datetime({ offset: true }),
+            decidedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/anonymisation-gates/:gateId',
+    alias: 'getAnonymisationGate',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'gateId',
+        type: 'Path',
+        schema: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+            pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+            status: z.enum(['submitted', 'pass', 'fail']),
+            aggregateScore: z.number().int().gte(0).lte(5),
+            removeScore: z.number().int().gte(0).lte(5),
+            topBottomCodingScore: z.number().int().gte(0).lte(5),
+            groupScore: z.number().int().gte(0).lte(5),
+            hashDigestScore: z.number().int().gte(0).lte(5),
+            totalScore: z.number().int().gte(0).lte(25),
+            passThreshold: z.number().int().gte(1).lte(25).default(15),
+            correlatedFeatureNotes: z.string().max(4000).optional(),
+            decisionRationale: z.string().max(2000).optional(),
+            waiveRequested: z.boolean().optional().default(false),
+            createdAt: z.string().datetime({ offset: true }),
+            decidedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/anonymisation-gates/:gateId/decision',
+    alias: 'decideAnonymisationGate',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: decideAnonymisationGate_Body,
+      },
+      {
+        name: 'gateId',
+        type: 'Path',
+        schema: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            gateId: z.string().regex(/^ang_[0-9A-HJKMNP-TV-Z]{26}$/),
+            pilotId: z.string().regex(/^plt_[0-9A-HJKMNP-TV-Z]{26}$/),
+            status: z.enum(['submitted', 'pass', 'fail']),
+            aggregateScore: z.number().int().gte(0).lte(5),
+            removeScore: z.number().int().gte(0).lte(5),
+            topBottomCodingScore: z.number().int().gte(0).lte(5),
+            groupScore: z.number().int().gte(0).lte(5),
+            hashDigestScore: z.number().int().gte(0).lte(5),
+            totalScore: z.number().int().gte(0).lte(25),
+            passThreshold: z.number().int().gte(1).lte(25).default(15),
+            correlatedFeatureNotes: z.string().max(4000).optional(),
+            decisionRationale: z.string().max(2000).optional(),
+            waiveRequested: z.boolean().optional().default(false),
+            createdAt: z.string().datetime({ offset: true }),
+            decidedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios(
+  'https://api.ddd-codegen-starter.local/v1',
+  endpoints
+);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}

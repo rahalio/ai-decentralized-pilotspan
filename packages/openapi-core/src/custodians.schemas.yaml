@@ -1,0 +1,231 @@
+openapi: 3.1.0
+info:
+  title: Custodians schemas
+  version: 0.1.0
+  description: Data custodians, dataset approvals, and quality issue logs.
+paths: {}
+components:
+  schemas:
+    CustodianId:
+      type: string
+      pattern: '^cst_[0-9A-HJKMNP-TV-Z]{26}$'
+    DatasetApprovalId:
+      type: string
+      pattern: '^dsa_[0-9A-HJKMNP-TV-Z]{26}$'
+    QualityIssueId:
+      type: string
+      pattern: '^qis_[0-9A-HJKMNP-TV-Z]{26}$'
+
+    Custodian:
+      type: object
+      required:
+        - custodianId
+        - personId
+        - datasetName
+        - createdAt
+      properties:
+        custodianId:
+          $ref: '#/components/schemas/CustodianId'
+        personId:
+          type: string
+        datasetName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        pilotId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CustodianAssign:
+      type: object
+      required:
+        - personId
+        - datasetName
+      properties:
+        personId:
+          type: string
+        datasetName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        pilotId:
+          type: string
+
+    ApprovalOutcome:
+      type: string
+      enum: [approved, rejected]
+
+    DatasetApproval:
+      type: object
+      required:
+        - approvalId
+        - pilotId
+        - datasetName
+        - outcome
+        - decidedAt
+      properties:
+        approvalId:
+          $ref: '#/components/schemas/DatasetApprovalId'
+        pilotId:
+          type: string
+        datasetName:
+          type: string
+        outcome:
+          $ref: '#/components/schemas/ApprovalOutcome'
+        rationale:
+          type: string
+          maxLength: 2000
+        decidedAt:
+          type: string
+          format: date-time
+
+    DatasetApprovalCreate:
+      type: object
+      required:
+        - pilotId
+        - datasetName
+        - outcome
+      properties:
+        pilotId:
+          type: string
+        datasetName:
+          type: string
+        outcome:
+          $ref: '#/components/schemas/ApprovalOutcome'
+        rationale:
+          type: string
+          maxLength: 2000
+
+    QualityIssueSeverity:
+      type: string
+      enum: [low, medium, high, critical]
+
+    QualityIssue:
+      type: object
+      required:
+        - issueId
+        - datasetName
+        - summary
+        - severity
+        - createdAt
+      properties:
+        issueId:
+          $ref: '#/components/schemas/QualityIssueId'
+        datasetName:
+          type: string
+        pilotId:
+          type: string
+        summary:
+          type: string
+          maxLength: 1000
+        severity:
+          $ref: '#/components/schemas/QualityIssueSeverity'
+        createdAt:
+          type: string
+          format: date-time
+
+    QualityIssueCreate:
+      type: object
+      required:
+        - datasetName
+        - summary
+        - severity
+      properties:
+        datasetName:
+          type: string
+        pilotId:
+          type: string
+        summary:
+          type: string
+          maxLength: 1000
+        severity:
+          $ref: '#/components/schemas/QualityIssueSeverity'
+
+    CustodianListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Custodian'
+        nextCursor:
+          type: string
+
+    CustodianResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Custodian'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    CustodianListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/CustodianListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    DatasetApprovalResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DatasetApproval'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    DatasetApprovalListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetApproval'
+        nextCursor:
+          type: string
+
+    DatasetApprovalListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DatasetApprovalListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    QualityIssueResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/QualityIssue'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    QualityIssueListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/QualityIssue'
+        nextCursor:
+          type: string
+
+    QualityIssueListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/QualityIssueListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

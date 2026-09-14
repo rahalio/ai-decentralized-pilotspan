@@ -1,0 +1,18 @@
+{
+  "name": "@pilotspan/openapi-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenAPI contracts for Pilotspan (common + domain YAMLs)",
+  "scripts": {
+    "lint:domains": "redocly lint",
+    "bundle:domains": "mkdir -p src/.bundled && redocly bundle identity --output src/.bundled/identity.json && redocly bundle readiness --output src/.bundled/readiness.json && redocly bundle pilots --output src/.bundled/pilots.json && redocly bundle anonymisation-gates --output src/.bundled/anonymisation-gates.json && redocly bundle custodians --output src/.bundled/custodians.json && redocly bundle talent-assignments --output src/.bundled/talent-assignments.json && redocly bundle shadow-ai --output src/.bundled/shadow-ai.json",
+    "lint": "pnpm run lint:domains",
+    "bundle": "pnpm run bundle:domains"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.34.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

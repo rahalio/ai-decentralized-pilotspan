@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: Anonymisation gate schemas
+  version: 0.1.0
+  description: Five-technique anonymisation passport scoring.
+paths: {}
+components:
+  schemas:
+    AnonymisationGateId:
+      type: string
+      pattern: '^ang_[0-9A-HJKMNP-TV-Z]{26}$'
+
+    GateStatus:
+      type: string
+      enum: [submitted, pass, fail]
+
+    TechniqueScore:
+      type: integer
+      minimum: 0
+      maximum: 5
+      description: Score for one anonymisation technique (0–5).
+
+    AnonymisationGate:
+      type: object
+      required:
+        - gateId
+        - pilotId
+        - status
+        - aggregateScore
+        - removeScore
+        - topBottomCodingScore
+        - groupScore
+        - hashDigestScore
+        - totalScore
+        - passThreshold
+        - createdAt
+      properties:
+        gateId:
+          $ref: '#/components/schemas/AnonymisationGateId'
+        pilotId:
+          type: string
+          pattern: '^plt_[0-9A-HJKMNP-TV-Z]{26}$'
+        status:
+          $ref: '#/components/schemas/GateStatus'
+        aggregateScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        removeScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        topBottomCodingScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        groupScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        hashDigestScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        totalScore:
+          type: integer
+          minimum: 0
+          maximum: 25
+        passThreshold:
+          type: integer
+          minimum: 1
+          maximum: 25
+          default: 15
+        correlatedFeatureNotes:
+          type: string
+          maxLength: 4000
+          description: Bias / correlated-feature notes (e.g. zip as proxy).
+        decisionRationale:
+          type: string
+          maxLength: 2000
+        waiveRequested:
+          type: boolean
+          description: Always blocked when true — ethics does not waive (BR-11).
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+
+    AnonymisationGateCreate:
+      type: object
+      required:
+        - pilotId
+        - aggregateScore
+        - removeScore
+        - topBottomCodingScore
+        - groupScore
+        - hashDigestScore
+      properties:
+        pilotId:
+          type: string
+        aggregateScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        removeScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        topBottomCodingScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        groupScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        hashDigestScore:
+          $ref: '#/components/schemas/TechniqueScore'
+        correlatedFeatureNotes:
+          type: string
+          maxLength: 4000
+
+    AnonymisationGateDecision:
+      type: object
+      required:
+        - outcome
+      properties:
+        outcome:
+          type: string
+          enum: [pass, fail]
+        rationale:
+          type: string
+          maxLength: 2000
+
+    AnonymisationGateListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnonymisationGate'
+        nextCursor:
+          type: string
+
+    AnonymisationGateResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnonymisationGate'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    AnonymisationGateListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnonymisationGateListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

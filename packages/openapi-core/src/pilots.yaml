@@ -1,0 +1,247 @@
+openapi: 3.1.0
+info:
+  title: Pilots API
+  version: 0.1.0
+  description: |
+    Pilot portfolio, APMF charters, cadence graduate/extend/kill, and audit export (BR-1, BR-6, BR-7, BR-12).
+  license:
+    name: Proprietary
+    url: https://pilotspan.local/license
+  x-domain: plt
+servers:
+  - url: https://api.pilotspan.local
+security:
+  - apiKey: []
+tags:
+  - name: Pilots
+    description: Pilot portfolio and charters
+  - name: CadenceReviews
+    description: Graduate / extend / kill decisions and audit packs
+paths:
+  /v1/pilots:
+    get:
+      operationId: listPilots
+      tags: [Pilots]
+      summary: List pilots
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PilotStatus
+        - name: lane
+          in: query
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PortfolioLane
+      responses:
+        '200':
+          description: Pilots page
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/PilotListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createPilot
+      tags: [Pilots]
+      summary: Create a pilot
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./pilots.schemas.yaml#/components/schemas/PilotCreate
+      responses:
+        '201':
+          description: Pilot created
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/PilotResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/pilots/{pilotId}:
+    get:
+      operationId: getPilot
+      tags: [Pilots]
+      summary: Get a pilot
+      parameters:
+        - name: pilotId
+          in: path
+          required: true
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PilotId
+      responses:
+        '200':
+          description: Pilot
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/PilotResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/pilots/{pilotId}/charter:
+    get:
+      operationId: getPilotCharter
+      tags: [Pilots]
+      summary: Get the APMF charter for a pilot
+      parameters:
+        - name: pilotId
+          in: path
+          required: true
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PilotId
+      responses:
+        '200':
+          description: Charter
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/CharterResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    put:
+      operationId: upsertPilotCharter
+      tags: [Pilots]
+      summary: Create or update the pilot charter (sponsor lock)
+      parameters:
+        - name: pilotId
+          in: path
+          required: true
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PilotId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./pilots.schemas.yaml#/components/schemas/CharterUpsert
+      responses:
+        '200':
+          description: Charter saved
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/CharterResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/pilots/{pilotId}/decisions:
+    get:
+      operationId: listPilotDecisions
+      tags: [CadenceReviews]
+      summary: List cadence decisions for a pilot
+      parameters:
+        - name: pilotId
+          in: path
+          required: true
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PilotId
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Decisions
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/PortfolioDecisionListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: recordPortfolioDecision
+      tags: [CadenceReviews]
+      summary: Record graduate / extend / kill
+      parameters:
+        - name: pilotId
+          in: path
+          required: true
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PilotId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./pilots.schemas.yaml#/components/schemas/PortfolioDecisionCreate
+      responses:
+        '201':
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/PortfolioDecisionResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/pilots/{pilotId}/audit-pack:
+    get:
+      operationId: getGraduateAuditPack
+      tags: [CadenceReviews]
+      summary: Export gate + decision history for a graduated pilot (BR-12)
+      parameters:
+        - name: pilotId
+          in: path
+          required: true
+          schema:
+            $ref: ./pilots.schemas.yaml#/components/schemas/PilotId
+      responses:
+        '200':
+          description: Audit pack
+          content:
+            application/json:
+              schema:
+                $ref: ./pilots.schemas.yaml#/components/schemas/GraduateAuditPackResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
