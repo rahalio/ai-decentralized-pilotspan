@@ -1,0 +1,605 @@
+openapi: 3.0.3
+info:
+  title: Pilotspan
+  version: 0.1.0
+  description: >-
+    AI pilot portfolio governance with readiness scoring, five-point anonymisation
+    gates, custodians, and talent assignments.
+  x-product-slug: ai-decentralized-pilotspan
+  x-source: ai-in-decentralized+ai/AI+Bible/
+servers:
+  - url: https://api.example.com
+tags:
+  - name: ReadinessAssessments
+  - name: Pilots
+  - name: AnonymisationGates
+  - name: Custodians
+  - name: TalentAssignments
+paths:
+  /v1/readiness-assessments:
+    get:
+      operationId: listReadinessAssessments
+      tags: [ReadinessAssessments]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Assessments page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeReadinessAssessment"
+    post:
+      operationId: createReadinessAssessment
+      tags: [ReadinessAssessments]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadinessAssessmentCreate"
+      responses:
+        "201":
+          description: Assessment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeReadinessAssessment"
+  /v1/pilots:
+    get:
+      operationId: listPilots
+      tags: [Pilots]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [proposed, active, graduated, extended, killed]
+      responses:
+        "200":
+          description: Pilots page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopePilot"
+    post:
+      operationId: createPilot
+      tags: [Pilots]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PilotCreate"
+      responses:
+        "201":
+          description: Pilot created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopePilot"
+  /v1/pilots/{pilotId}/decisions:
+    parameters:
+      - name: pilotId
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: recordPortfolioDecision
+      tags: [Pilots]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioDecision"
+      responses:
+        "201":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopePortfolioDecision"
+  /v1/anonymisation-gates:
+    get:
+      operationId: listAnonymisationGates
+      tags: [AnonymisationGates]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Gates page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeAnonymisationGate"
+    post:
+      operationId: submitAnonymisationGate
+      tags: [AnonymisationGates]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnonymisationGateCreate"
+      responses:
+        "201":
+          description: Gate submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeAnonymisationGate"
+  /v1/anonymisation-gates/{gateId}/decision:
+    parameters:
+      - name: gateId
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: decideAnonymisationGate
+      tags: [AnonymisationGates]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome]
+              properties:
+                outcome:
+                  type: string
+                  enum: [pass, fail]
+                rationale: { type: string }
+      responses:
+        "200":
+          description: Gate decided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeAnonymisationGate"
+  /v1/custodians:
+    get:
+      operationId: listCustodians
+      tags: [Custodians]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Custodians page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeCustodian"
+    post:
+      operationId: assignCustodian
+      tags: [Custodians]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustodianAssign"
+      responses:
+        "201":
+          description: Custodian assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeCustodian"
+  /v1/dataset-approvals:
+    post:
+      operationId: decideDatasetApproval
+      tags: [Custodians]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DatasetApproval"
+      responses:
+        "201":
+          description: Approval recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDatasetApproval"
+  /v1/talent-assignments:
+    get:
+      operationId: listTalentAssignments
+      tags: [TalentAssignments]
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Talent assignments page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeTalentAssignment"
+    post:
+      operationId: createTalentAssignment
+      tags: [TalentAssignments]
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentAssignmentCreate"
+      responses:
+        "201":
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeTalentAssignment"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    ResponseMeta:
+      type: object
+      required: [requestId, timestamp]
+      properties:
+        requestId: { type: string }
+        timestamp: { type: string, format: date-time }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+
+    ReadinessAssessment:
+      type: object
+      required: [id, organisationId, overallScore]
+      properties:
+        id: { type: string }
+        organisationId: { type: string }
+        structureScore: { type: number, format: float }
+        infrastructureScore: { type: number, format: float }
+        dataScore: { type: number, format: float }
+        talentScore: { type: number, format: float }
+        processScore: { type: number, format: float }
+        overallScore: { type: number, format: float }
+    ReadinessAssessmentCreate:
+      type: object
+      required: [organisationId]
+      properties:
+        organisationId: { type: string }
+        structureScore: { type: number, format: float }
+        infrastructureScore: { type: number, format: float }
+        dataScore: { type: number, format: float }
+        talentScore: { type: number, format: float }
+        processScore: { type: number, format: float }
+    Pilot:
+      type: object
+      required: [id, name, status, sponsorId]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status:
+          type: string
+          enum: [proposed, active, graduated, extended, killed]
+        sponsorId: { type: string }
+        successMetric: { type: string }
+    PilotCreate:
+      type: object
+      required: [name, sponsorId, successMetric]
+      properties:
+        name: { type: string }
+        sponsorId: { type: string }
+        successMetric: { type: string }
+        readinessAssessmentId: { type: string }
+    PortfolioDecision:
+      type: object
+      required: [decision, rationale]
+      properties:
+        id: { type: string }
+        decision:
+          type: string
+          enum: [graduate, extend, kill]
+        rationale: { type: string }
+        evidencedBusinessValue: { type: boolean }
+    AnonymisationGate:
+      type: object
+      required: [id, pilotId, status]
+      properties:
+        id: { type: string }
+        pilotId: { type: string }
+        status:
+          type: string
+          enum: [submitted, pass, fail]
+        aggregate: { type: boolean }
+        remove: { type: boolean }
+        topBottomCoding: { type: boolean }
+        group: { type: boolean }
+        hashDigest: { type: boolean }
+        score: { type: integer }
+    AnonymisationGateCreate:
+      type: object
+      required: [pilotId]
+      properties:
+        pilotId: { type: string }
+        aggregate: { type: boolean }
+        remove: { type: boolean }
+        topBottomCoding: { type: boolean }
+        group: { type: boolean }
+        hashDigest: { type: boolean }
+        correlatedFeatureNotes: { type: string }
+    Custodian:
+      type: object
+      required: [id, personId, datasetName]
+      properties:
+        id: { type: string }
+        personId: { type: string }
+        datasetName: { type: string }
+    CustodianAssign:
+      type: object
+      required: [personId, datasetName]
+      properties:
+        personId: { type: string }
+        datasetName: { type: string }
+    DatasetApproval:
+      type: object
+      required: [pilotId, datasetName, outcome]
+      properties:
+        id: { type: string }
+        pilotId: { type: string }
+        datasetName: { type: string }
+        outcome:
+          type: string
+          enum: [approved, rejected]
+        rationale: { type: string }
+    TalentAssignment:
+      type: object
+      required: [id, pilotId, role, personId]
+      properties:
+        id: { type: string }
+        pilotId: { type: string }
+        role:
+          type: string
+          enum: [data_scientist, domain_specialist, engineer, product_owner, scrum_master]
+        personId: { type: string }
+        hoursCommitted: { type: number, format: float }
+    TalentAssignmentCreate:
+      type: object
+      required: [pilotId, role, personId]
+      properties:
+        pilotId: { type: string }
+        role:
+          type: string
+          enum: [data_scientist, domain_specialist, engineer, product_owner, scrum_master]
+        personId: { type: string }
+        hoursCommitted: { type: number, format: float }
+
+    DataEnvelopeReadinessAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ReadinessAssessment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeReadinessAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReadinessAssessment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+
+    DataEnvelopePilot:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/Pilot"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopePilot:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Pilot"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+
+    DataEnvelopePortfolioDecision:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/PortfolioDecision"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopePortfolioDecision:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PortfolioDecision"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+
+    DataEnvelopeAnonymisationGate:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/AnonymisationGate"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeAnonymisationGate:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/AnonymisationGate"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+
+    DataEnvelopeCustodian:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/Custodian"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeCustodian:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Custodian"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+
+    DataEnvelopeDatasetApproval:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DatasetApproval"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeDatasetApproval:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DatasetApproval"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+
+    DataEnvelopeTalentAssignment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/TalentAssignment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeTalentAssignment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/TalentAssignment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
